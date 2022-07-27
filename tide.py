@@ -7,7 +7,6 @@ from matplotlib.animation import FuncAnimation
 
 print(11)
 
-
 ###############################################################################
 
 def _plotHarmonic(ax, harmonic, period,
@@ -22,8 +21,17 @@ def _plotHarmonic(ax, harmonic, period,
     ax.clear()
     start, end = period.startEnd()
     time, amplitude = harmonic.xySine(start, end)
+
+    amplitude = amplitude + 4 #FIXME
+
     time = period.removeOffset(time)
     ax.plot(period.normalizeTime(time), amplitude, color=color)
+
+    def toTime(x):
+        from datetime import timedelta
+        t = timedelta(seconds=(x%24)*60*60.0)
+        return str(t)[:-3]
+
 
     if minmax:
         x, y = harmonic.minmax(time, amplitude)
@@ -32,6 +40,7 @@ def _plotHarmonic(ax, harmonic, period,
         for i, _ in enumerate(x):
             ypad = period.ytextpad(y[i])
             xpad = period.xtextpad(y[i])
+            ax.text(x[i] + xpad, y[i] - ypad, toTime(x[i]), fontsize=period.fontsize)
             ax.text(x[i] + xpad, y[i] + ypad , round(y[i],2), fontsize=period.fontsize)
 
     ax.set_xticks(period.xticks)
@@ -236,7 +245,7 @@ if __name__ == '__main__':
     with open('data/data.pickle', 'rb') as f:
         station = pickle.load(f)
 
-    all = HarmonicGroup('all', station.harmonics)
+    all = HarmonicGroup('all', station.harmonics.values())
     fig = plt.figure(constrained_layout=True)
     fig.suptitle("Tidal Components for Charleston, OR")
 
@@ -246,14 +255,18 @@ if __name__ == '__main__':
 
     date_start = date(2022, 7, 25)
     date_end = date(2022, 7, 27)
-    offset = ((date_start - station.epoch).days -1) * 24
+    offset = ((date_start - station.epoch).days -1) * 24 -9
     
-    period = DayPeriod(30*24*6)
-    period = DayPeriod(6*24, 24*5)
-    period = DatePeriod(station.epoch, date_start, date_end)
-    period = HourPeriod(24, offset)
+    #period = DayPeriod(30*24*6)
+    #period = DayPeriod(6*24, 24*5)
+    #period = DatePeriod(station.epoch, date_start, date_end)
+    #period = HourPeriod(24, offset)
 
-    period = HourPeriod(48, -9)
+    period = HourPeriod(24*2, 0)
+    z0 = all['Z0']
+    z0._speed = 360
+    z0._amplitude = 0
+    print(z0)
 
     #Kindplotter.plot(all, period)
     #PeriodPlotter.plot(all, period)
